@@ -5,6 +5,7 @@ import com.test.tasks.AgregarProducto;
 import com.test.tasks.Autenticarse;
 import com.test.tasks.DiligenciarFormulario;
 import com.test.userinterfaces.LoginPage;
+import io.cucumber.datatable.DataTable;
 import io.cucumber.java.es.Dado;
 import io.cucumber.java.es.Cuando;
 import io.cucumber.java.es.Entonces;
@@ -16,6 +17,8 @@ import io.cucumber.java.Before;
 import net.serenitybdd.screenplay.targets.Target;
 import org.hamcrest.Matchers;
 import org.openqa.selenium.By;
+
+import java.util.List;
 
 import static org.hamcrest.Matchers.equalToIgnoringCase;
 import static net.serenitybdd.screenplay.GivenWhenThen.seeThat;
@@ -87,6 +90,28 @@ public class LoginStepDefinitions {
         );
     }
 
+    @Y("el usuario agrega los siguientes productos al carrito:")
+    public void agregarMultiplesProductosAlCarrito(io.cucumber.datatable.DataTable dataTable) {
+        // Convertimos la tabla a una estructura de lista de listas
+        List<List<String>> filas = dataTable.asLists(String.class);
 
+        // Recorremos desde el índice 1 para omitir la cabecera "producto"
+        for (int i = 1; i < filas.size(); i++) {
+            // El .trim() elimina espacios en blanco que puedan romper el XPath
+            String nombreProducto = filas.get(i).get(0).trim();
 
+            // El actor agrega cada producto de la tabla de forma individual
+            theActorInTheSpotlight().attemptsTo(
+                    AgregarProducto.conNombre(nombreProducto)
+            );
+        }
+    }
+
+    @Y("el usuario procede al checkout")
+    public void procederAlCheckout() {
+        // El actor ejecuta la acción exclusiva de ir al checkout
+        theActorInTheSpotlight().attemptsTo(
+                AgregarProducto.procederAlCheckout()
+        );
+    }
 }

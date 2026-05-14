@@ -1,0 +1,23 @@
+# 📈 Conclusiones Técnicas y Puntos de Mejora - Proyecto Serenity
+
+Este documento recopila las conclusiones de ingeniería de software derivadas de la expansión del framework de automatización web, así como los puntos críticos identificados para asegurar la escalabilidad y mantenibilidad de la suite de pruebas bajo el patrón Screenplay.
+
+---
+
+## 📉 Conclusiones del Proyecto
+
+* **Industrialización con Esquemas del Escenario:** La transformación del flujo a un **Esquema del escenario** (*Scenario Outline*) validó la madurez del framework. Al permitir que un único set de pasos Gherkin ejecute múltiples ciclos de compra variando dinámicamente los productos y los datos de envío, se optimizó la cobertura de pruebas y se eliminó la duplicidad de código en el repositorio.
+* **Procesamiento Eficiente de Estructuras Complejas:** La implementación de lógica de control para el manejo de tablas de datos (`DataTable`) demostró la flexibilidad del patrón Screenplay. El framework procesa listas verticales de productos combinando bucles nativos de Java 1.8 (`for` clásico) con métodos de saneamiento de cadenas (`.trim()`), lo que garantiza que los datos crudos del feature se transformen en acciones web válidas de forma transparente.
+* **Flexibilidad Mediante Tareas Inteligentes:** La refactorización de la clase `AgregarProducto` probó el principio de responsabilidad única. Al sobrecargar sus constructores e instrumentar métodos especializados (`conNombre`, `procederAlCheckout`), la misma tarea mutó de un flujo estático y rígido a un componente polimórfico capaz de añadir productos específicos o de interactuar exclusivamente con los flujos de la pasarela de pago.
+* **Estabilización frente a Cambios de UI:** El uso de localizadores dinámicos basados en la función de Selenium `contains(text(), '%s')` incrementó la robustez de los scripts. Al no depender de IDs rígidos o posiciones indexadas en la estructura HTML, el framework tolera variaciones parciales en los nombres del catálogo comercial (como la corrección de *Sauce Labs Fleece* a *Sauce Labs Fleece Jacket*) sin romper la ejecución.
+* **Cumplimiento Estricto de la Arquitectura de Serenity:** La corrección del acceso de los constructores a modificadores públicos (`public`) resolvió las restricciones de inyección de dependencias de la biblioteca. Esto garantizó que el motor de proxies (`Tasks.instrumented`) pudiera registrar y mapear cada subtarea de manera correcta en el hilo de ejecución del actor en escena (`theActorInTheSpotlight()`).
+
+---
+
+## 🚀 Puntos de Mejora Identificados
+
+* **Implementación de Preguntas de Screenplay (Questions):** Actualmente, la validación de la información en el carrito se realiza de manera simplificada en los Step Definitions. Se sugiere diseñar clases que implementen la interfaz `Question<T>` de Serenity (ej. `CantidadDeProductos.enElCarrito()`) para interrogar al navegador y desacoplar por completo las aserciones estéticas del código de pegamento de Cucumber.
+* **Gestión Centralizada de Selectores (Page Objects puros):** Se identificó que algunos selectores web clave (como `BOTON_CHECKOUT` e `ICONO_CARRITO`) coexisten directamente dentro de clases de tareas o estructuras mixtas. Se recomienda centralizar el 100% de los localizadores dentro de clases exclusivas de interfaz de usuario (`com.test.userinterfaces`) para facilitar el mantenimiento si el diseño de la aplicación cambia.
+* **Validación Dinámica de Totales de Facturación:** Para robustecer el alcance de las pruebas E2E, se aconseja parametrizar el precio esperado en la tabla de *Ejemplos*. Esto permitirá crear una tarea que sume el costo de los 3 productos elegidos, le aplique la tasa impositiva correspondiente y verifique que el subtotal en pantalla coincida matemáticamente antes de pulsar el botón de confirmación.
+* **Configuración de Ejecuciones en Paralelo:** A medida que la sección de *Ejemplos* sume más filas de datos, el tiempo total de ejecución por lotes crecerá linealmente. Configurar el plugin de Maven Failsafe (`maven-failsafe-plugin`) junto con las propiedades de Cucumber para habilitar la ejecución en paralelo permitirá correr las iteraciones de forma simultánea en múltiples hilos, reduciendo los tiempos de respuesta en entornos de CI/CD.
+* **Saneamiento y Vaciado Automático del Inventario (Teardown):** Si una iteración previa falla a mitad del flujo, la siguiente ejecución podría heredar productos residuales en el carrito, alterando las condiciones iniciales de la prueba. Implementar una tarea de limpieza al inicio de cada escenario que verifique y vacie el carrito garantizará la idempotencia absoluta de cada caso de prueba.
